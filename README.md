@@ -1,89 +1,76 @@
-# Quran RAG Chatbot (Local)
+# Quran RAG Chatbot
 
-A beginner-friendly local Retrieval-Augmented Generation (RAG) project using the complete Quran in Arabic and an English translation.
+A local Quran-based Retrieval-Augmented Generation (RAG) chatbot that answers questions using Arabic Quranic verses and Sahih International English translation.
 
-## Dataset
+## Tech Stack
+- **Backend:** Python, FastAPI
+- **Frontend:** React, TypeScript, Vite
+- **Vector Database:** ChromaDB
+- **Embeddings:** Sentence Transformers
+- **LLM:** Qwen 2.5 3B via Ollama
 
-The downloader fetches two complete editions from the AlQuran Cloud API and joins them by Surah/Ayah number:
+## Features
+- Complete Quran dataset (6,236 ayahs, 114 surahs).
+- Multilingual semantic search.
+- Relevant verse retrieval with references.
+- Locally generated answers using retrieved context.
+- React-based chat interface.
 
-- Arabic: `quran-uthmani` (Uthmani script).
-- English: `en.sahih` (Saheeh International translation).
-- The CSV has one row per ayah, with Arabic and English in separate columns.
-- The script checks that both editions contain the same 6,236 unique ayahs across all 114 surahs before writing `data/quran.csv`.
+## Setup
 
-Sources: https://alquran.cloud/api and https://api.alquran.cloud/v1/quran/quran-uthmani . The English text is a translation of the meanings, not the Arabic Quran itself. Preserve source attribution and check the source's current reuse terms before redistributing the dataset.
+**1. Clone the repository**
+```powershell
+git clone https://github.com/Aqeel6668/quran-rag-chatbot.git
+cd quran-rag-chatbot
+```
 
-## Setup (Windows PowerShell)
-
-### 1. Install packages
-
+**2. Install Python dependencies**
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-### 2. Download the complete Quran dataset
-
-Run once from the project folder:
-
+**3. Download the Quran dataset**
 ```powershell
 python download_quran.py
 ```
 
-This needs an internet connection. It creates `data/quran.csv` and checks for exactly 6,236 unique ayahs. You do not need to edit the CSV manually.
-
-### 3. Start the local LLM
-
-Install Ollama and run:
-
+**4. Download the local LLM**
 ```powershell
 ollama pull qwen2.5:3b
 ```
 
-Make sure Ollama is running.
-
-### 4. Build the vector database
-
+**5. Build the vector database**
 ```powershell
 python embedder.py
 ```
 
-This downloads the multilingual embedding model the first time and indexes the Arabic and English text in ChromaDB. Run it again whenever the source CSV changes.
-
-### 5. Start the chatbot
-
+**6. Start the backend**
 ```powershell
-python app.py
+uvicorn server:app --reload
 ```
 
-Type `exit` to quit.
+**7. Start the frontend** (in a second terminal)
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-## How RAG works
+Open `http://localhost:5173` in your browser.
 
-1. The multilingual Sentence Transformer converts the question and each verse into embeddings.
-2. ChromaDB finds the most similar verse embeddings.
-3. ChromaDB returns the original Arabic and English verse text with Surah/Ayah references.
-4. `chatbot.py` puts those verses into a prompt.
-5. Qwen 2.5:3B, running locally through Ollama, generates an answer from the supplied context.
+## How It Works
+1. User submits a question.
+2. Sentence Transformers creates an embedding.
+3. ChromaDB retrieves relevant Quranic verses.
+4. Retrieved verses are passed to Qwen.
+5. The model generates a context-based answer.
 
-The LLM receives verse text, not embedding vectors.
+## Dataset Source
+[AlQuran Cloud API](https://alquran.cloud/api)
 
-## Files
+Editions: `quran-uthmani` and `en.sahih`.
 
-- `download_quran.py`: downloads and validates the complete dataset.
-- `data/quran.csv`: generated source dataset (created by the download script).
-- `loader.py`: loads and checks the 6,236 ayahs.
-- `embedder.py`: creates multilingual embeddings and stores them in ChromaDB.
-- `chatbot.py`: retrieves verses and asks Qwen to answer using those verses only.
-- `app.py`: terminal interface.
-- `vector_db/`: generated ChromaDB database.
-- `requirements.txt`: Python dependencies.
-
-## Important limitations
-
-This is an educational RAG prototype, not an authoritative source of religious rulings or Quran interpretation. Search similarity does not prove that a verse answers a question, and the LLM can still make mistakes. Verify the Arabic text, translation, and references against a trusted Quran edition. A translation is not a substitute for the Arabic text.
-
-## Source and reuse terms
-
-AlQuran Cloud API: https://alquran.cloud/api . Editions: `quran-uthmani` and `en.sahih`. Preserve source attribution and check current reuse terms before redistribution.
+## Disclaimer
+This is an educational project, not an authoritative source of religious rulings or Quran interpretation. Always verify verses, translations, and references against a trusted Quran edition.
